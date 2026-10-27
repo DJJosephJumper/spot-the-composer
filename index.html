@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#111827"><meta name="description" content="Guess a mystery classical composer in ten tries. A new daily puzzle and unlimited practice."><title>Spot the Composer</title>
+<style>
+:root{font-family:Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,sans-serif;color:#f5f1e8;background:#111827}*{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(ellipse at top,#25344a,#101722 65%)}main{max-width:1050px;margin:auto;padding:32px 18px 70px}header{text-align:center;margin-bottom:28px}.eyebrow{color:#d6b878;text-transform:uppercase;letter-spacing:.23em;font-size:12px;font-weight:800}h1{font-family:Georgia,serif;font-size:clamp(35px,6vw,60px);margin:10px 0}header p{color:#bfc8d3;margin:8px auto;max-width:680px;line-height:1.5}.panel{background:#1b2635;border:1px solid #344258;border-radius:18px;padding:22px;margin:20px 0;box-shadow:0 15px 35px #0002}.toolbar{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}.badge{background:#314054;color:#f3d89a;border-radius:999px;padding:9px 13px;font-weight:700}button{cursor:pointer;border:0;border-radius:10px;padding:12px 16px;font-weight:750;background:#e5c484;color:#1d2530}button:hover{filter:brightness(1.09)}button:disabled{opacity:.45;cursor:not-allowed}button.secondary{background:#33465d;color:#f7f7f7}.entry{display:flex;gap:10px;margin:18px 0 8px;flex-wrap:wrap}.entry input{flex:1;min-width:220px;padding:14px;background:#101a27;border:1px solid #62738a;border-radius:10px;color:white;font-size:16px}input:focus{outline:2px solid #e5c484}#suggestions{display:none;max-height:230px;overflow:auto;background:#101a27;border:1px solid #607086;border-radius:10px;margin-top:5px}#suggestions button{display:block;width:100%;text-align:left;background:transparent;color:white;border-radius:0;padding:11px 14px}#suggestions button:hover{background:#30425a}.hint{color:#b6c3d3;font-size:13px;margin:10px 0}.error{color:#ffb6b6;min-height:20px}.table-wrap{overflow-x:auto}table{border-collapse:separate;border-spacing:5px;width:100%;min-width:830px}th{font-size:12px;color:#cbd5e1;text-align:center;padding:10px 4px}td{padding:12px 7px;text-align:center;border-radius:8px;background:#364253;font-size:13px;min-width:100px}td.name{font-weight:800;min-width:155px;background:#2c3b50}td.correct{background:#236b51;color:white}td.partial{background:#a37a2e;color:white}td.wrong{background:#5c3443;color:white}.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:13px;color:#c9d4e0;margin-top:12px}.dot{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:5px}.green{background:#236b51}.yellow{background:#a37a2e}.red{background:#8a4454}#result{display:none;border:1px solid #caa86b;background:#2a3340;border-radius:14px;padding:20px;margin-top:16px}#result h2{font-family:Georgia,serif;margin:0 0 8px}#result p{line-height:1.6;color:#e0e5ea}footer{font-size:12px;color:#a8b6c6;text-align:center;margin-top:26px;line-height:1.6}.toggle{display:flex;align-items:center;gap:9px;color:#cbd5e1;font-size:14px}.toggle input{accent-color:#e5c484}#remaining{font-size:14px;color:#cbd5e1}@media(max-width:600px){main{padding:22px 10px}.panel{padding:15px}.entry button{width:100%}}
+</style></head><body><main><header><div class="eyebrow">A musical mystery game</div><h1>♫ Spot the Composer</h1><p>Guess the mystery classical composer in 10 tries. Choose from 63 composers. One new daily puzzle, plus unlimited practice. Each guess reveals clues about their life and music.</p></header>
+<section class="panel"><div class="toolbar"><div class="badge" id="round">Daily Challenge</div><label class="toggle"><input type="checkbox" id="daily" checked> Daily challenge</label><button class="secondary" id="new">Play unlimited ↻</button></div><p id="remaining">10 guesses remaining</p><div class="entry"><input id="guess" placeholder="Search for a composer…" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" aria-label="Composer name"><button id="submit">Guess composer</button></div><div id="suggestions"></div><div class="error" id="error" aria-live="polite"></div><div class="hint">🟩 Exact match · 🟨 Related or close · 🟥 Different. ↑ / ↓ indicate whether the mystery composer's number is higher or lower.</div></section>
+<section class="panel"><div class="table-wrap"><table><thead><tr><th>Composer</th><th>Birth Year</th><th>Nationality</th><th>Musical Era</th><th>Primary Genre</th><th>Instrument Played</th></tr></thead><tbody id="rows"><tr><td colspan="6" style="background:#263448;color:#b9c6d5">Your guesses will appear here.</td></tr></tbody></table></div><div class="legend"><span><i class="dot green"></i>Exact</span><span><i class="dot yellow"></i>Close / overlapping</span><span><i class="dot red"></i>No match</span></div><div id="result" aria-live="polite"></div></section>
+<footer>Composer eras are simplified for gameplay: Baroque, Classical, Romantic, Impressionist, 20th Century, Minimalist, and Contemporary. Some composers cross stylistic boundaries; classifications are editorial choices. Daily progress is saved in this browser.<br>Made for curious listeners • Classical music</footer></main>
+<script>
+// Data model: [name, birth, nationality, era, unused placeholder, primary genre, instruments, note]
+const raw=[
+['Johann Sebastian Bach',1685,'German','Baroque',1100,'Keyboard','Organ|Harpsichord|Violin','A master of counterpoint, known for the Brandenburg Concertos and the Well-Tempered Clavier.'],
+['George Frideric Handel',1685,'German-British','Baroque',600,'Vocal','Organ|Harpsichord','Celebrated for Messiah and Music for the Royal Fireworks.'],
+['Antonio Vivaldi',1678,'Italian','Baroque',800,'Orchestral','Violin','The Venetian violinist behind The Four Seasons.'],
+['Domenico Scarlatti',1685,'Italian','Baroque',555,'Keyboard','Harpsichord','Famous for hundreds of inventive keyboard sonatas.'],
+['Claudio Monteverdi',1567,'Italian','Baroque',250,'Opera','Viola|Voice','A pivotal figure in the development of opera.'],
+['Henry Purcell',1659,'English','Baroque',400,'Vocal','Organ','Known for Dido and Aeneas and English sacred music.'],
+['Joseph Haydn',1732,'Austrian','Classical',750,'Chamber','Piano|Violin','A central figure in the development of the symphony and string quartet.'],
+['Wolfgang Amadeus Mozart',1756,'Austrian','Classical',626,'Orchestral','Piano|Violin','A prodigious composer of symphonies, operas, and concertos.'],
+['Ludwig van Beethoven',1770,'German','Classical',722,'Orchestral','Piano|Violin','His nine symphonies helped bridge the Classical and Romantic eras.'],
+['Franz Schubert',1797,'Austrian','Classical',1000,'Vocal','Piano|Violin','A prolific composer especially celebrated for art songs.'],
+['Frédéric Chopin',1810,'Polish','Romantic',230,'Keyboard','Piano','Best known for poetic and technically demanding piano music.'],
+['Franz Liszt',1811,'Hungarian','Romantic',700,'Keyboard','Piano','A virtuoso pianist and innovator of the symphonic poem.'],
+['Robert Schumann',1810,'German','Romantic',300,'Keyboard','Piano','Known for piano cycles, songs, and symphonies.'],
+['Clara Schumann',1819,'German','Romantic',65,'Keyboard','Piano','An influential concert pianist and composer.'],
+['Felix Mendelssohn',1809,'German','Romantic',200,'Orchestral','Piano|Organ','Known for his violin concerto and A Midsummer Night’s Dream.'],
+['Johannes Brahms',1833,'German','Romantic',250,'Chamber','Piano','Known for four symphonies, concertos, and chamber music.'],
+['Pyotr Ilyich Tchaikovsky',1840,'Russian','Romantic',170,'Ballet','Piano','Composed Swan Lake, The Nutcracker, and symphonies.'],
+['Giuseppe Verdi',1813,'Italian','Romantic',35,'Opera','Organ|Piano','A defining composer of Italian opera.'],
+['Richard Wagner',1813,'German','Romantic',40,'Opera','Piano','Known for his monumental music dramas and leitmotifs.'],
+['Antonín Dvořák',1841,'Czech','Romantic',200,'Orchestral','Viola|Organ','Composed the New World Symphony.'],
+['Edvard Grieg',1843,'Norwegian','Romantic',150,'Keyboard','Piano','Known for Peer Gynt and his Piano Concerto.'],
+['Gustav Mahler',1860,'Austrian','Romantic',25,'Orchestral','Piano','Known for large-scale symphonies and song cycles.'],
+['Sergei Rachmaninoff',1873,'Russian','Romantic',80,'Keyboard','Piano','Famed pianist-composer of lush concertos.'],
+['Claude Debussy',1862,'French','Impressionist',140,'Keyboard','Piano','Known for Clair de lune and La Mer.'],
+['Maurice Ravel',1875,'French','Impressionist',85,'Orchestral','Piano','Known for Boléro and his vivid orchestration.'],
+['Jean Sibelius',1865,'Finnish','Romantic',120,'Orchestral','Violin','Known for Finlandia and seven symphonies.'],
+['Igor Stravinsky',1882,'Russian-American','20th Century',100,'Ballet','Piano','Composed The Rite of Spring and The Firebird.'],
+['Béla Bartók',1881,'Hungarian','20th Century',120,'Keyboard','Piano','Combined folk-music research with modernist composition.'],
+['Arnold Schoenberg',1874,'Austrian-American','20th Century',70,'Chamber','Cello|Violin','Developed the twelve-tone method.'],
+['Dmitri Shostakovich',1906,'Russian','20th Century',147,'Orchestral','Piano','Known for 15 symphonies and 15 string quartets.'],
+['Sergei Prokofiev',1891,'Russian','20th Century',130,'Orchestral','Piano','Composed Peter and the Wolf and Romeo and Juliet.'],
+['Aaron Copland',1900,'American','20th Century',100,'Orchestral','Piano','Known for Appalachian Spring and Fanfare for the Common Man.'],
+['Samuel Barber',1910,'American','20th Century',50,'Orchestral','Piano|Voice','Known for Adagio for Strings.'],
+['Leonard Bernstein',1918,'American','20th Century',90,'Musical Theater','Piano','Composed West Side Story and Candide.'],
+['Benjamin Britten',1913,'English','20th Century',100,'Opera','Piano','Known for Peter Grimes and The Young Person’s Guide to the Orchestra.'],
+['Olivier Messiaen',1908,'French','20th Century',70,'Keyboard','Organ|Piano','Known for innovative rhythm, color, and birdsong.'],
+['Philip Glass',1937,'American','Minimalist',200,'Opera','Piano','A leading minimalist composer of operas and film scores.'],
+['Steve Reich',1936,'American','Minimalist',70,'Chamber','Piano|Percussion','Known for Music for 18 Musicians and phasing techniques.'],
+['John Adams',1947,'American','Contemporary',80,'Opera','Clarinet','Known for Nixon in China and Short Ride in a Fast Machine.'],
+['Arvo Pärt',1935,'Estonian','Minimalist',100,'Choral','Piano','Known for his tintinnabuli style.'],
+['Caroline Shaw',1982,'American','Contemporary',55,'Chamber','Violin|Voice','A Pulitzer Prize-winning composer and performer.'],
+['Jennifer Higdon',1962,'American','Contemporary',100,'Orchestral','Flute','Known for orchestral and chamber works.'],
+['Max Richter',1966,'German-British','Contemporary',50,'Chamber','Piano','Known for Recomposed: Vivaldi and music for film and television.'],
+["Jean-Philippe Rameau",1683,"French","Baroque",0,"Opera","Organ|Harpsichord","French Baroque composer and influential theorist."],
+["Georg Philipp Telemann",1681,"German","Baroque",0,"Orchestral","Violin|Organ","Prolific composer of instrumental and sacred music."],
+["François Couperin",1668,"French","Baroque",0,"Keyboard","Harpsichord|Organ","Celebrated for refined French harpsichord music."],
+["Florence Price",1887,"American","Romantic",0,"Orchestral","Piano|Organ","Pioneering American symphonist and composer."],
+["Samuel Coleridge-Taylor",1875,"English","Romantic",0,"Choral","Violin","Known for Hiawatha’s Wedding Feast."],
+["Hector Berlioz",1803,"French","Romantic",0,"Orchestral","Guitar|Flute","Known for Symphonie fantastique and bold orchestration."],
+["Giacomo Puccini",1858,"Italian","Romantic",0,"Opera","Organ|Piano","Composer of La bohème, Tosca, and Madama Butterfly."],
+["Camille Saint-Saëns",1835,"French","Romantic",0,"Orchestral","Piano|Organ","Known for Carnival of the Animals and Organ Symphony."],
+["Bedřich Smetana",1824,"Czech","Romantic",0,"Orchestral","Piano","Known for Má vlast and The Bartered Bride."],
+["Alexander Borodin",1833,"Russian","Romantic",0,"Orchestral","Piano|Cello","Known for Polovtsian Dances and string quartets."],
+["Nikolai Rimsky-Korsakov",1844,"Russian","Romantic",0,"Orchestral","Piano","Known for Scheherazade and brilliant orchestration."],
+["Modest Mussorgsky",1839,"Russian","Romantic",0,"Keyboard","Piano","Known for Pictures at an Exhibition and Boris Godunov."],
+["Lili Boulanger",1893,"French","Impressionist",0,"Choral","Piano|Organ","Known for luminous choral and orchestral works."],
+["Germaine Tailleferre",1892,"French","Impressionist",0,"Chamber","Piano","Member of Les Six, known for graceful chamber and orchestral music."],
+["Francis Poulenc",1899,"French","Impressionist",0,"Choral","Piano","Known for distinctive sacred choral and piano music."],
+["Gabriel Fauré",1845,"French","20th Century",0,"Chamber","Piano|Organ","Known for his Requiem and chamber works."],
+["Ralph Vaughan Williams",1872,"English","20th Century",0,"Orchestral","Violin|Organ","Known for Fantasia on a Theme by Thomas Tallis."],
+["John Cage",1912,"American","Minimalist",0,"Experimental","Piano","Known for 4′33″ and experimental approaches to sound."],
+["Erik Satie",1866,"French","Minimalist",0,"Keyboard","Piano","Known for Gymnopédies and sparse, unconventional piano music."],
+["Hania Rani",1990,"Polish","Contemporary",0,"Keyboard","Piano","Contemporary pianist-composer known for intimate, atmospheric music."],
+];
+const composers=raw.map((r,i)=>({id:i,name:r[0],birth:r[1],nationality:r[2],era:r[3],genre:r[5],instruments:r[6].split('|'),note:r[7]}));
+let target, guesses=[],finished=false,selected=null;
+const DAILY_KEY_PREFIX="spot-composer-daily-v4-";
+const dailyDate=()=>new Date().toISOString().slice(0,10);
+const dailyKey=()=>DAILY_KEY_PREFIX+dailyDate();
+function saveDaily(){if($('daily').checked){try{localStorage.setItem(dailyKey(),JSON.stringify({guesses:guesses.map(g=>g.id),finished}))}catch(e){}}}
+const $=id=>document.getElementById(id), input=$('guess');
+function hash(s){let h=2166136261;for(const c of s){h^=c.charCodeAt(0);h=Math.imul(h,16777619)}return h>>>0}
+function start(){
+ guesses=[];finished=false;selected=null;
+ const daily=$('daily').checked,key=dailyDate();
+ target=composers[daily?hash(key)%composers.length:Math.floor(Math.random()*composers.length)];
+ $('round').textContent=daily?'Daily Challenge · '+key:'Unlimited Practice';
+ $('new').textContent=daily?'Play unlimited ↻':'New practice composer ↻';
+ $('new').disabled=false;
+ input.value='';input.disabled=false;$('submit').disabled=false;
+ $('rows').innerHTML='<tr><td colspan="6" style="background:#263448;color:#b9c6d5">Your guesses will appear here.</td></tr>';
+ $('result').style.display='none';$('error').textContent='';$('suggestions').style.display='none';
+ if(daily){try{const stored=JSON.parse(localStorage.getItem(dailyKey())||'null');if(stored&&Array.isArray(stored.guesses)){
+  guesses=stored.guesses.map(id=>composers[id]).filter(Boolean).slice(0,10);
+  finished=guesses.some(g=>g.id===target.id)||guesses.length>=10;
+ }}catch(e){}}
+ render();updateRemaining();
+ if(finished)finish(guesses.some(g=>g.id===target.id));
+}
+function updateRemaining(){$('remaining').textContent=`${10-guesses.length} guess${10-guesses.length===1?'':'es'} remaining`}
+function cell(value,status){const td=document.createElement('td');td.textContent=value;td.className=status;return td}
+function related(a,b){return a.split(/\s*\/\s*|\s*-\s*/).some(x=>b.toLowerCase().includes(x.trim().toLowerCase())&&x.trim().length>3)}
+function render(){const body=$('rows');body.innerHTML='';for(const c of guesses){const tr=document.createElement('tr');tr.appendChild(cell(c.name,'name'));const diff=target.birth-c.birth;tr.appendChild(cell(`${c.birth}${diff===0?' ✓':diff>0?' ↑':' ↓'}`,diff===0?'correct':Math.abs(diff)<=25?'partial':'wrong'));const nExact=c.nationality===target.nationality;tr.appendChild(cell(c.nationality,nExact?'correct':c.nationality.split('-').some(x=>target.nationality.includes(x))?'partial':'wrong'));tr.appendChild(cell(c.era,c.era===target.era?'correct':'wrong'));tr.appendChild(cell(c.genre,c.genre===target.genre?'correct':'wrong'));const overlap=c.instruments.filter(x=>target.instruments.includes(x));tr.appendChild(cell(c.instruments.join(', '),c.instruments.join('|')===target.instruments.join('|')?'correct':overlap.length?'partial':'wrong'));body.appendChild(tr)}}
+function shareText(){
+ const daily=$('daily').checked;
+ const heading=`🎼 Spot the Composer ${daily?dailyDate():'Practice'} ${guesses.some(g=>g.id===target.id)?guesses.length+'/10':'X/10'}`;
+ const lines=guesses.map(c=>{
+  const delta=target.birth-c.birth;
+  const national=c.nationality===target.nationality?'🟩':c.nationality.split('-').some(x=>target.nationality.includes(x))?'🟨':'🟥';
+  const overlap=c.instruments.some(x=>target.instruments.includes(x));
+  return [delta===0?'🟩':Math.abs(delta)<=25?'🟨':'🟥',national,c.era===target.era?'🟩':'🟥',c.genre===target.genre?'🟩':'🟥',c.instruments.join('|')===target.instruments.join('|')?'🟩':overlap?'🟨':'🟥'].join('');
+ });
+ return [heading,...lines,'',location.protocol.startsWith('http')?location.origin+location.pathname:'Spot the Composer'].join('\n');
+}
+async function shareResult(){
+ const message=shareText();
+ try{if(navigator.share){await navigator.share({text:message});return}}catch(e){if(e.name==='AbortError')return}
+ try{await navigator.clipboard.writeText(message);$('share-status').textContent='Copied to clipboard!'}
+ catch(e){const t=document.createElement('textarea');t.value=message;t.setAttribute('readonly','');t.style.width='100%';$('share-status').replaceChildren(t);t.select();$('share-status').insertAdjacentText('afterbegin','Copy the text below: ')}
+}
+function finish(won){
+ finished=true;input.disabled=true;$('submit').disabled=true;saveDaily();
+ const box=$('result');box.style.display='block';box.innerHTML='';
+ const title=document.createElement('h2');title.textContent=won?'🎉 Bravo! You spotted the composer.':'🎼 The mystery is revealed';
+ const p=document.createElement('p');const bold=document.createElement('strong');bold.textContent=target.name;
+ p.append(bold,document.createTextNode(` (${target.birth}) — ${target.note}`));
+ const share=document.createElement('button');share.textContent='Share results 🟩';share.onclick=shareResult;
+ const status=document.createElement('div');status.id='share-status';status.setAttribute('aria-live','polite');status.style.marginTop='12px';
+ const btn=document.createElement('button');btn.className='secondary';btn.style.marginLeft='8px';btn.textContent='Play unlimited';btn.onclick=()=>{$('daily').checked=false;start()};
+ box.append(title,p,share,btn,status);
+}
+function submit(){if(finished)return;const text=input.value.trim();const c=composers.find(c=>c.name.toLowerCase()===text.toLowerCase())||selected;if(!c||c.name.toLowerCase()!==text.toLowerCase()){$('error').textContent='Choose a composer from the suggestions.';return}if(guesses.some(g=>g.id===c.id)){$('error').textContent='You already guessed that composer.';return}guesses.push(c);$('error').textContent='';input.value='';selected=null;$('suggestions').style.display='none';render();updateRemaining();saveDaily();if(c.id===target.id)finish(true);else if(guesses.length===10)finish(false)}
+function suggest(){selected=null;const q=input.value.trim().toLowerCase();const box=$('suggestions');box.innerHTML='';if(!q){box.style.display='none';return}const matches=composers.filter(c=>c.name.toLowerCase().includes(q)&&!guesses.some(g=>g.id===c.id)).slice(0,9);for(const c of matches){const b=document.createElement('button');b.textContent=c.name;b.onclick=()=>{input.value=c.name;selected=c;box.style.display='none';input.focus()};box.appendChild(b)}box.style.display=matches.length?'block':'none'}
+input.addEventListener('input',suggest);input.addEventListener('keydown',e=>{if(e.key==='Enter'){const first=$('suggestions').querySelector('button');if(first&&$('suggestions').style.display!=='none'){first.click()}submit()}});$('submit').onclick=submit;$('new').onclick=()=>{if($('daily').checked)$('daily').checked=false;start()};$('daily').onchange=start;start();
+</script></body></html>
